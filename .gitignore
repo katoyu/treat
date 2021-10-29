@@ -1,3 +1,8 @@
-./treat-env
-./clipart_imgs
-./letter_imgs
+treat-env
+clipart_imgs/*
+letter_imgs/*
+.vscode
+__pycache__
+args
+save
+splits

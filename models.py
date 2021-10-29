@@ -5,14 +5,13 @@ import torch
 from torch import nn
 from torchvision import transforms
 from torch.utils.data import Dataset
-import scipy.ndimage as ndimage
+# import scipy.ndimage as ndimage
 # from scipy.misc import imresize
 from PIL import Image
+import imageio
 
 import torch.nn.functional as F
 from string import ascii_lowercase
-
-
 
 import glob
 import math
@@ -25,7 +24,7 @@ from logger import get_logger
 
 logger = get_logger(__name__)
 
-letters = ['lower' + a for a in ascii_lowercase]
+letters = ['upper' + a for a in ascii_lowercase]
 
 # ===================transforms & preprocessing=====================
 img_transform = transforms.Compose([
@@ -69,14 +68,22 @@ class MyData(Dataset):
         identity = []
 
         logger.info("Getting MyData Data")
+        
 
         if 'cliparts' in args.data:
             logger.info("Getting clipart data ...")
-            for i, filename in enumerate(os.path.join(args.cliparts_dir, '*.png')):
+
+            filepath = os.path.join(args.cliparts_dir, '*.png')
+            print(filepath)
+            files = glob.glob(filepath)
+            print(files)
+            for i, filename in enumerate(files):
+                print(filename)
                 if i > args.datalimit:
                     logger.info("Setting a limit of %d for cliparts" % args.datalimit)
                     break
-                img = ndimage.imread(filename)[:, :, 3]
+                img = imageio.imread(filename)[:, :, 3]
+                print(img.shape)
                 img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
                 img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
                 img = cv2.bitwise_not(img)
@@ -88,22 +95,32 @@ class MyData(Dataset):
                 weights.append(1)
                 identity.append(1)
                 self.filenames.append(filename)
-                self.labels.append(letters.index('lowera'))    # dummy label
+                print(letters)
+                self.labels.append(letters.index('uppera'))    # dummy label
 
         if 'letters' in args.data:
             logger.info("Getting letter data ...")
-            for i, filename in enumerate(os.path.join(args.letters_dir, '*.png')):
+
+            filepath = os.path.join(args.letters_dir, '*.png')
+            print(filepath)
+            files = glob.glob(filepath)
+            print(files)
+            for i, filename in enumerate(files):
                 if i > args.datalimit:
                     logger.info("Setting a limit of %d for letters" % args.datalimit)
                     break
-                img = ndimage.imread(filename)[:, :, :3]
+                img = imageio.imread(filename)[:, :, :3]
                 # res = imresize(img, size=(img_size, img_size))  # numpy array of dimensions (s,s,3)
                 res = np.array(Image.fromarray(img).resize((img_size, img_size), resample=2))
 
                 res = res / 255.0
                 data.append(res)
+                print([i for i in filename.split('/')[-1].split('.png')[0] if not i.isdigit()])
                 label = ''.join([i for i in filename.split('/')[-1].split('.png')[0] if not i.isdigit()])
+                print(label, type(label))
                 self.labels.append(letters.index(label))
+                # self.labels.append(label)
+                print(self.labels)
                 identity.append(2)
                 self.filenames.append(filename)
                 weights.append(float(args.alpha))
@@ -346,7 +363,7 @@ class MultiTask(nn.Module):
         super(MultiTask, self).__init__()
         self.args = args
         self.fc = nn.Linear(args.zsize, 52)    # for classification loss
-        self.sm = nn.Softmax()    # for classification loss
+        self.sm = nn.Softmax(dim=1)    # for classification loss
 
         if args.model == 'alexnet':
             self.encoder = AlexnetEncoder(args=args)
@@ -363,4 +380,6 @@ class MultiTask(nn.Module):
         y = self.fc(x)
         z = self.sm(y)
         x = self.decoder(x)
+        print(x.shape, y.shape, z.shape)
         return x, y, z
+

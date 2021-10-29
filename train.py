@@ -51,6 +51,8 @@ logger.info("Starting data splitting")
 
 # If indices are already saved then load from file directly else peform split once and save
 tv_split = int(np.floor(0.1 * len(dataset)))
+# tv_split = int(np.floor(0.1 * len(dataset)))
+
 split_name = "%s-%d-%d" % ("-".join(args.data), args.datalimit, len(dataset))
 if os.path.isfile('splits/split-%s.pkl' % split_name):
     logger.info("Using saved split splits/split-%d.pkl" % len(dataset))
@@ -63,8 +65,8 @@ else:
     np.random.shuffle(indices)
     train_idx, val_idx = indices[tv_split:], indices[:tv_split]
     myindices = [train_idx, val_idx]
-    with open('splits/split-%s.pkl' % split_name, 'wb') as f:
-        pickle.dump(myindices, f)
+    # with open('splits/split-%s.pkl' % split_name, 'wb') as f:
+    #     pickle.dump(myindices, f)
 
 train_sampler = SubsetRandomSampler(train_idx)
 val_sampler = SubsetRandomSampler(val_idx)
@@ -80,9 +82,12 @@ num_epochs = 100
 
 model = MultiTask(args)
 
-if torch.cuda.is_available():
+if torch.cuda.is_available() == True:
+    print("CUDA!")
     logger.info("Using GPU")
     model.cuda()
+else:
+    print("No CUDA!")
 
 rcriterion = torch.nn.MSELoss(reduction='none')
 ccriterion = torch.nn.CrossEntropyLoss(reduction='none')
@@ -100,10 +105,16 @@ for epoch in range(num_epochs):
     total_letters = 0
     for data in dataloader_train:
         img, labels, weights, identity = data
-        img = img.float().cuda()
-        labels = labels.long().cuda()
-        weights = weights.float().cuda()
-        identity = identity.cuda()
+        if torch.cuda.is_available() == True:
+            img = img.float().cuda()
+            labels = labels.long().cuda()
+            weights = weights.float().cuda()
+            identity = identity.cuda()
+        else:
+            img = img.float()
+            labels = labels.long()
+            weights = weights.float()
+            identity = identity
 
         # Markers for letters which are used for classification loss
         letter_flags = (identity == 2).float()
@@ -145,10 +156,16 @@ for epoch in range(num_epochs):
         total_letters = 0
         for data in dataloader_val:
             img, labels, weights, identity = data
-            img = img.float().cuda()
-            labels = labels.long().cuda()
-            weights = weights.float().cuda()
-            identity = identity.cuda()
+            if torch.cuda.is_available() == True:
+                img = img.float().cuda()
+                labels = labels.long().cuda()
+                weights = weights.float().cuda()
+                identity = identity.cuda()
+            else:
+                img = img.float()
+                labels = labels.long()
+                weights = weights.float()
+                identity = identity
 
             # Markers for letters which are used for classification loss
             letter_flags = (identity == 2).float()
