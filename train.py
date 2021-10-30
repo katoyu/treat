@@ -51,7 +51,6 @@ logger.info("Starting data splitting")
 
 # If indices are already saved then load from file directly else peform split once and save
 tv_split = int(np.floor(0.1 * len(dataset)))
-# tv_split = int(np.floor(0.1 * len(dataset)))
 
 split_name = "%s-%d-%d" % ("-".join(args.data), args.datalimit, len(dataset))
 if os.path.isfile('splits/split-%s.pkl' % split_name):

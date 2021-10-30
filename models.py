@@ -69,7 +69,6 @@ class MyData(Dataset):
 
         logger.info("Getting MyData Data")
         
-
         if 'cliparts' in args.data:
             logger.info("Getting clipart data ...")
 
@@ -78,12 +77,12 @@ class MyData(Dataset):
             files = glob.glob(filepath)
             print(files)
             for i, filename in enumerate(files):
-                print(filename)
+                # print(filename)
                 if i > args.datalimit:
                     logger.info("Setting a limit of %d for cliparts" % args.datalimit)
                     break
                 img = imageio.imread(filename)[:, :, 3]
-                print(img.shape)
+                # print(img.shape)
                 img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
                 img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
                 img = cv2.bitwise_not(img)
@@ -95,7 +94,7 @@ class MyData(Dataset):
                 weights.append(1)
                 identity.append(1)
                 self.filenames.append(filename)
-                print(letters)
+                # print(letters)
                 self.labels.append(letters.index('uppera'))    # dummy label
 
         if 'letters' in args.data:
@@ -115,12 +114,12 @@ class MyData(Dataset):
 
                 res = res / 255.0
                 data.append(res)
-                print([i for i in filename.split('/')[-1].split('.png')[0] if not i.isdigit()])
+                # print([i for i in filename.split('/')[-1].split('.png')[0] if not i.isdigit()])
                 label = ''.join([i for i in filename.split('/')[-1].split('.png')[0] if not i.isdigit()])
-                print(label, type(label))
+                # print(label, type(label))
                 self.labels.append(letters.index(label))
                 # self.labels.append(label)
-                print(self.labels)
+                # print(self.labels)
                 identity.append(2)
                 self.filenames.append(filename)
                 weights.append(float(args.alpha))
@@ -363,7 +362,7 @@ class MultiTask(nn.Module):
         super(MultiTask, self).__init__()
         self.args = args
         self.fc = nn.Linear(args.zsize, 52)    # for classification loss
-        self.sm = nn.Softmax(dim=1)    # for classification loss
+        self.sm = nn.Softmax(dim=0)    # for classification loss
 
         if args.model == 'alexnet':
             self.encoder = AlexnetEncoder(args=args)
@@ -380,6 +379,6 @@ class MultiTask(nn.Module):
         y = self.fc(x)
         z = self.sm(y)
         x = self.decoder(x)
-        print(x.shape, y.shape, z.shape)
+        # print(x.shape, y.shape, z.shape)
         return x, y, z
 
