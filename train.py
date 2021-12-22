@@ -51,7 +51,6 @@ logger.info("Starting data splitting")
 
 # If indices are already saved then load from file directly else peform split once and save
 tv_split = int(np.floor(0.1 * len(dataset)))
-# tv_split = int(np.floor(0.1 * len(dataset)))
 
 split_name = "%s-%d-%d" % ("-".join(args.data), args.datalimit, len(dataset))
 if os.path.isfile('splits/split-%s.pkl' % split_name):
@@ -65,8 +64,11 @@ else:
     np.random.shuffle(indices)
     train_idx, val_idx = indices[tv_split:], indices[:tv_split]
     myindices = [train_idx, val_idx]
-    # with open('splits/split-%s.pkl' % split_name, 'wb') as f:
-    #     pickle.dump(myindices, f)
+    with open('splits/split-%s.pkl' % split_name, 'wb') as f:
+        pickle.dump(myindices, f)
+
+print('train_idx, val_idx', len(train_idx), len(val_idx))
+
 
 train_sampler = SubsetRandomSampler(train_idx)
 val_sampler = SubsetRandomSampler(val_idx)
@@ -81,13 +83,13 @@ learning_rate = 0.0001
 num_epochs = 100
 
 model = MultiTask(args)
+print('model', model)
 
 if torch.cuda.is_available() == True:
-    print("CUDA!")
     logger.info("Using GPU")
     model.cuda()
 else:
-    print("No CUDA!")
+    logger.info("NO using GPU")
 
 rcriterion = torch.nn.MSELoss(reduction='none')
 ccriterion = torch.nn.CrossEntropyLoss(reduction='none')
@@ -99,11 +101,17 @@ loss_history_train, loss_history_val = [], []
 best_loss = sys.maxsize
 e = 0
 for epoch in range(num_epochs):
+    print('train')
     # ===================train========================
     model.train()
     loss_total_train = lr_total_train = lc_total_train = 0
     total_letters = 0
+    cnt=0
     for data in dataloader_train:
+        print(cnt)
+        cnt += 1
+        print(data[0].shape, data[1].shape, data[2].shape, data[3].shape)
+        # print(data[0], data[1], data[2], data[3])
         img, labels, weights, identity = data
         if torch.cuda.is_available() == True:
             img = img.float().cuda()
@@ -120,6 +128,7 @@ for epoch in range(num_epochs):
         letter_flags = (identity == 2).float()
         total_letters += letter_flags.sum()
         # ===================forward=====================
+        print('img', img.shape)
         routput, coutput, _ = model(img)
 
         lr = rcriterion(routput, img)
@@ -149,6 +158,7 @@ for epoch in range(num_epochs):
     loss_train = loss_total_train / (dataset_len - tv_split)
     del lr_total_train, lc_total_train, loss_total_train
 
+    print('val')
     # ===================val========================
     with torch.no_grad():
         model.eval()
