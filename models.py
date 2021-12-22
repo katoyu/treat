@@ -5,7 +5,8 @@ import torch
 from torch import nn
 from torchvision import transforms
 from torch.utils.data import Dataset
-import scipy.ndimage as ndimage
+import imageio
+# import scipy.ndimage as ndimage
 # from scipy.misc import imresize
 from PIL import Image
 
@@ -76,7 +77,8 @@ class MyData(Dataset):
                 if i > args.datalimit:
                     logger.info("Setting a limit of %d for cliparts" % args.datalimit)
                     break
-                img = ndimage.imread(filename)[:, :, 3]
+                # img = ndimage.imread(filename)[:, :, 3]
+                img = imageio.imread(filename)[:, :, :3]
                 img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
                 img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
                 img = cv2.bitwise_not(img)
@@ -96,7 +98,8 @@ class MyData(Dataset):
                 if i > args.datalimit:
                     logger.info("Setting a limit of %d for letters" % args.datalimit)
                     break
-                img = ndimage.imread(filename)[:, :, :3]
+                # img = ndimage.imread(filename)[:, :, :3]
+                img = imageio.imread(filename)[:, :, :3]
                 # res = imresize(img, size=(img_size, img_size))  # numpy array of dimensions (s,s,3)
                 res = np.array(Image.fromarray(img).resize((img_size, img_size), resample=2))
 
