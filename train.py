@@ -49,7 +49,7 @@ logger.info("Dataset obtained successfully")
 # Split data as train and test
 logger.info("Starting data splitting")
 
-# If indices are already saved then load from file directly else peform split once and save
+# If indices are already saved then load from file directly else perform split once and save
 tv_split = int(np.floor(0.1 * len(dataset)))
 
 split_name = "%s-%d-%d" % ("-".join(args.data), args.datalimit, len(dataset))
@@ -83,13 +83,12 @@ learning_rate = 0.0001
 num_epochs = 100
 
 model = MultiTask(args)
-print('model', model)
 
 if torch.cuda.is_available() == True:
     logger.info("Using GPU")
     model.cuda()
 else:
-    logger.info("NO using GPU")
+    logger.info("No using GPU")
 
 rcriterion = torch.nn.MSELoss(reduction='none')
 ccriterion = torch.nn.CrossEntropyLoss(reduction='none')
