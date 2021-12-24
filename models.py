@@ -391,3 +391,39 @@ class MultiTask(nn.Module):
         # print(x.shape, y.shape, z.shape)
         return x, y, z
 
+class Encoding(nn.Module):
+    """Only encoding module."""
+
+    def __init__(self, args):
+        super(Encoding, self).__init__()
+        self.args = args
+        print(self.args)
+        self.fc = nn.Linear(args.zsize, 52)    # for classification loss
+        self.sm = nn.Softmax(dim=0)    # for classification loss
+
+        if args.model == 'alexnet':
+            self.encoder = AlexnetEncoder(args=args)
+        elif args.model == 'bigresnet':
+            self.encoder = ResnetEncoder(block=Bottleneck, layers=[3, 4, 6, 3], args=args)
+        elif args.model == 'smallresnet':
+            self.encoder = ResnetEncoder(block=Bottleneck, layers=[1, 1, 1, 1], args=args)
+
+        self.decoder = Decoder(args)#
+
+    def forward(self, x):
+        x = self.encoder(x)
+        self.representation = x
+        # print('representation', self.representation.shape)
+        # print('-----------------')
+        y = self.fc(x)
+        # print('y', y.shape)
+        # print('-----------------')
+        z = self.sm(y)
+        # print('z', z.shape)
+        # print('-----------------')
+        # x = self.decoder(x)
+        # print('x', x.shape)
+        # print('-----------------')        
+        # # print(x.shape, y.shape, z.shape)
+        return self.representation, y, z
+
