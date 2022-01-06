@@ -73,21 +73,25 @@ class MyData(Dataset):
             logger.info("Getting clipart data ...")
 
             filepath = os.path.join(args.cliparts_dir, '*.png')
-            print(filepath)
             files = glob.glob(filepath)
-            print(len(files))
             for i, filename in enumerate(files):
-                # print(filename)
                 if i > args.datalimit:
                     logger.info("Setting a limit of %d for cliparts" % args.datalimit)
                     break
-                img = imageio.imread(filename)[:, :, 3]
-                # print(img.shape)
-                img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+                img = imageio.imread(filename)#[:, :, 3]
+                img_prop = []
+                for x in img:
+                    tmp = []
+                    for y in x:
+                        tmp.append(255 - y[3]) # Aの値を抽出して白黒反転
+                    img_prop.append(tmp)
+                img_prop = np.array(img_prop).astype("uint8")
+                cv2.imwrite("image_in_in.png", img_prop)
+                img = img_prop
+                img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
                 img = cv2.bitwise_not(img)
-                # res = imresize(img, size=(img_size, img_size))
                 res = np.array(Image.fromarray(img).resize((img_size, img_size), resample=2))
+                cv2.imwrite("image_res.png", res)
 
                 res = res / 255.0
                 data.append(res)
@@ -101,29 +105,24 @@ class MyData(Dataset):
             logger.info("Getting letter data ...")
 
             filepath = os.path.join(args.letters_dir, '*.png')
-            print(filepath)
             files = glob.glob(filepath)
-            print(len(files))
             for i, filename in enumerate(files):
                 if i > args.datalimit:
                     logger.info("Setting a limit of %d for letters" % args.datalimit)
                     break
-                img = imageio.imread(filename)[:, :, :3]
-                # res = imresize(img, size=(img_size, img_size))  # numpy array of dimensions (s,s,3)
+                img = imageio.imread(filename)#[:, :, :3]
                 res = np.array(Image.fromarray(img).resize((img_size, img_size), resample=2))
 
                 res = res / 255.0
                 data.append(res)
-                # print([i for i in filename.split('/')[-1].split('.png')[0] if not i.isdigit()])
                 label = ''.join([i for i in filename.split('/')[-1].split('.png')[0] if not i.isdigit()])
-                # print(label, type(label))
                 self.labels.append(letters.index(label))
-                # self.labels.append(label)
-                # print(self.labels)
                 identity.append(2)
                 self.filenames.append(filename)
                 weights.append(float(args.alpha))
 
+        # print('data', len(data), data[0].shape)
+        cv2.imwrite("data[0].png", data[0] * 255)
         self.mydata = data
         self.transform = img_transform
         self.weights = weights
@@ -135,6 +134,9 @@ class MyData(Dataset):
             x = np.transpose(self.mydata[index], (2, 0, 1))
             # x = self.transform(x)
             x = torch.FloatTensor(x)
+            # x = torch.FloatTensor(self.mydata[index])
+            # x = x.permute(2, 0, 1)
+            # print(x.shape)
             x -= 0.5
             x /= 0.5
         else:
@@ -142,7 +144,7 @@ class MyData(Dataset):
         return x, self.labels[index], self.weights[index], self.identity[index]    # return (img, label, w, identity)
 
     def __len__(self):
-        """Return numner of data items."""
+        """Return number of data items."""
         return len(self.mydata)
 
 
