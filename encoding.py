@@ -20,6 +20,9 @@ logger = get_logger(__name__)
 
 IMG_SIZE = 224
 
+np.random.seed(0)
+torch.manual_seed(0)
+
 args = parser.parse_args()
 args.data = args.data.split(',')
 args.data.sort()
@@ -44,8 +47,7 @@ optimizer = torch.optim.Adam(
 )
 
 # args, save, splits読み込み
-# 学習モデルのために何の情報が必要？→モデルの重み
-# job_0_model_alexnet_alpha_0.25_datalimit_40250.pth
+# 学習モデルのために何の情報が必要？→モデルの重み, job_0_model_alexnet_alpha_0.25_datalimit_40250.pth
 model_path = '/content/drive/MyDrive/Colab notebooks/Logo-generation/Trick_or_TReAT/treat/save/job_0_model_alexnet_alpha_0.25_datalimit_40250.pth'
 model.load_state_dict(torch.load(model_path))
  
@@ -78,8 +80,6 @@ else:
     myindices = [train_idx, val_idx]
     with open('splits/split-%s.pkl' % split_name, 'wb') as f:
         pickle.dump(myindices, f)
-
-print('train_idx, val_idx', len(train_idx), len(val_idx))
 
 
 train_sampler = SubsetRandomSampler(train_idx)
@@ -118,9 +118,9 @@ for data in dataloader_train:
 routput_list[0] = routput_list[0].reshape(1,128)
 routput_list[1] = routput_list[1].reshape(1,128)
 
-cosSim = torch.nn.CosineSimilarity(dim=1, eps=1e-08)
-print(len(routput_list), routput_list[0].shape, routput_list[1].shape)
-print(1-cosSim(routput_list[0], routput_list[1]))
+# cosSim = torch.nn.CosineSimilarity(dim=1, eps=1e-08)
+# print(len(routput_list), routput_list[0].shape, routput_list[1].shape)
+# print(1-cosSim(routput_list[0], routput_list[1]))
 
 # input1 = torch.randn(100, 128)
 # input2 = torch.randn(100, 128)
