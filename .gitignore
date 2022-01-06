@@ -1,9 +1,13 @@
 treat-env
 clipart_imgs/*
 letter_imgs/*
+test_clipart_imgs/*
+test_letter_imgs/*
 .vscode
 __pycache__
 args
 save
 splits
 *.pyc
+*.png
+*.txt
